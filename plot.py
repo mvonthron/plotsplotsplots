@@ -1,11 +1,29 @@
-from pyqtgraph.Qt import QtGui, QtCore
-import numpy as np
+import threading
+import time
+from queue import Queue
+
+from PySide import QtGui, QtCore
 import pyqtgraph as pg
 
-class Plotter(QtCore.QObject):
-    def __init__(self):
+class Watcher(QtCore.QThread):
+    def __init__(self, parent, queue):
         super().__init__()
+        self.parent = parent
+        self.queue = queue
 
+    def run(self):
+        while True:
+            i = self.queue.get()
+            print("received", i)
+            self.queue.task_done()
+            self.parent.new_data(i)
+
+class Plotter(threading.Thread):
+    def __init__(self, queue):
+        super().__init__()
+        self.watcher = Watcher(self, queue)
+
+    def setup(self):
         self.app = QtGui.QApplication([])
         self.win = QtGui.QMainWindow()
         self.win.setWindowTitle('Plot test')
@@ -28,11 +46,28 @@ class Plotter(QtCore.QObject):
         self.plot_widget.setXRange(0, 6)
         self.plot_widget.setYRange(0, 1)
 
-    def show(self):
+    def run(self):
+        self.setup()
+        self.watcher.start()
+
         self.win.show()
         self.app.exec_()
 
+    def new_data(self, i):
+        print("Received new data:", i)
+
 
 if __name__ == '__main__':
-    p = Plotter()
-    p.show()
+    queue = Queue()
+
+    p = Plotter(queue)
+    p.start()
+
+    print('launched')
+    for i in range(10, 0, -1):
+        queue.put(i)
+        time.sleep(0.5)
+
+
+
+
