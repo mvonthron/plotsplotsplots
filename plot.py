@@ -1,48 +1,42 @@
-import threading
-import time
-from queue import Queue
-
-import numpy as np
 from PySide import QtGui, QtCore
 import pyqtgraph as pg
+
+import settings
+
 
 class Plotter(QtCore.QObject):
     def __init__(self):
         super().__init__()
-        self.y = []
-        self.y2 = []
+
+        self.app = QtGui.QApplication([])
+        self.win = pg.GraphicsWindow('Plots plots plots!')
+
+        self.y_data = []
+        self.plot_widget = []
+        self.plot = []
+
+    def add_plot(self, win, index):
+        plot_widget = win.addPlot(name='Plot {}'.format(index))
+
+        plot = plot_widget.plot(antialias=True, pen={'color': 'F66'})
+
+        plot_widget.setLabel('left', 'Value', units='V')
+        plot_widget.setLabel('bottom', 'Time', units='s')
+        plot_widget.setXRange(0, 1000)
+        plot_widget.setYRange(0, 10)
+
+        return plot_widget, plot
 
     def setup(self):
-        self.app = QtGui.QApplication([])
-        self.win = QtGui.QMainWindow()
-        self.win.setWindowTitle('Plot test')
-        self.win.resize(600, 400)
+        for i in range(settings.NUMBER_OF_SENSORS):
+            if i > 0 and i % settings.PLOTS_PER_ROw == 0:
+                self.win.nextRow()
 
-        self.widget = QtGui.QWidget()
-        self.win.setCentralWidget(self.widget)
+            w, p = self.add_plot(self.win, i)
+            self.plot_widget.append(w)
+            self.plot.append(p)
+            self.y_data.append([])
 
-        self.layout = QtGui.QGridLayout()
-        self.widget.setLayout(self.layout)
-
-        self.plot_widget = pg.PlotWidget(name='Plot1')
-        self.layout.addWidget(self.plot_widget)
-
-        self.plot = self.plot_widget.plot(antialias=True, pen={'color': 'F66'})
-
-        self.plot_widget.setLabel('left', 'Value', units='V')
-        self.plot_widget.setLabel('bottom', 'Time', units='s')
-        self.plot_widget.setXRange(0, 1000)
-        self.plot_widget.setYRange(0, 10)
-
-        self.plot_widget2 = pg.PlotWidget(name='Plot2')
-        self.layout.addWidget(self.plot_widget2)
-
-        self.plot2 = self.plot_widget2.plot(antialias=True, pen={'color': '6F6'})
-
-        self.plot_widget2.setLabel('left', 'Value', units='V')
-        self.plot_widget2.setLabel('bottom', 'Time', units='s')
-        self.plot_widget2.setXRange(0, 1000)
-        self.plot_widget2.setYRange(0, 10)
 
 
     def run(self):
@@ -53,12 +47,10 @@ class Plotter(QtCore.QObject):
 
     @QtCore.Slot(object)
     def new_data(self, data):
-        # print(" received ->", i)
-        self.y.append(data.src_values[0])
-        self.plot.setData(y=self.y)
-
-        self.y2.append(data.src_values[1])
-        self.plot2.setData(y=self.y2)
+        # print(" received ->", data)
+        for i in range(settings.NUMBER_OF_SENSORS):
+            self.y_data[i].append(data.src_values[i])
+            self.plot[i].setData(y=self.y_data[i])
 
 
 if __name__ == '__main__':

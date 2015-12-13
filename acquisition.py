@@ -7,7 +7,8 @@ import time
 import numpy as np
 from PySide import QtCore
 
-from messages import DataPacket, SENSOR_NUMBER
+from messages import DataPacket
+import settings
 
 class Serial(threading.Thread):
     def __init__(self):
@@ -32,9 +33,9 @@ class FakeSerial(QtCore.QThread):
         for i in range(1000):
             d = DataPacket()
             d.src_timestamp = time.time()*1000 - self.start_time
-            d.src_values = list(np.random.random_sample(SENSOR_NUMBER))
-            d.src_values[0] += 5
-            d.src_values[1] += 2
+            d.src_values = list(np.random.random_sample(settings.NUMBER_OF_SENSORS))
+            d.src_values[0] += 8
+            d.src_values[1] = 2
             d.time_received = datetime.now()
 
             self.source.emit(d)
