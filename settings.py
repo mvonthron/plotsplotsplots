@@ -14,7 +14,8 @@ plots = {
     # specialized parameters
     0: {
         'title': 'Meh',
-        'color': '67C8FF'
+        'color': '67C8FF',
+        'yrange': [40, 160],
     },
     5: {
         'yrange': [0, 700],
@@ -23,4 +24,13 @@ plots = {
     4: {
         'fill': '6F63'
     }
+}
+
+# defines basic calibration/transformation functions
+transform = {
+    'default': None,
+    # scale [0,1024) => [50,150)
+    0: lambda x: x/1024*100+50,
+    # identity
+    3: lambda x: x,
 }

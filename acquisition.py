@@ -23,7 +23,6 @@ class FakeSerial(QtCore.QThread):
     # signals must be part of the class definition
     # http://pyqt.sourceforge.net/Docs/PyQt5/signals_slots.html
     source = QtCore.Signal(object)
-    sink = QtCore.Signal(object)
 
     def __init__(self):
         super().__init__()
@@ -34,7 +33,7 @@ class FakeSerial(QtCore.QThread):
             d = DataPacket()
             d.src_timestamp = time.time()*1000 - self.start_time
             d.src_values = list(np.random.random_sample(settings.NUMBER_OF_SENSORS))
-            d.src_values[0] += 8
+            d.src_values[0] *= 1024
             d.src_values[1] = 2 + d.src_values[1]/10
             d.src_values[4] += np.sin(i/60)*settings.plots[4]['yrange'][1]*0.4 + 4
             d.src_values[5] += 500

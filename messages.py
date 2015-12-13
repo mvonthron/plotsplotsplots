@@ -5,3 +5,4 @@ class DataPacket:
         self.src_timestamp = None
         self.src_values = [None]*settings.NUMBER_OF_SENSORS
         self.time_received = None
+        self.values = []

@@ -53,7 +53,7 @@ class Plotter(QtCore.QObject):
     def new_data(self, data):
         # print(" received ->", data)
         for i in range(settings.NUMBER_OF_SENSORS):
-            self.y_data[i].append(data.src_values[i])
+            self.y_data[i].append(data.values[i])
             self.plot[i].setData(y=self.y_data[i])
 
 
