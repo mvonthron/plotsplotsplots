@@ -16,16 +16,22 @@ class Plotter(QtCore.QObject):
         self.plot = []
 
     def add_plot(self, win, index):
-        plot_widget = win.addPlot(name='Plot {}'.format(index))
+        params = settings.plots[index]
 
-        plot = plot_widget.plot(antialias=True, pen={'color': 'F66'})
+        plot_widget = win.addPlot(name=params['title'].format(index=index))
+
+        plot = plot_widget.plot(antialias=True, pen={'color': params['color']})
+        if params['fill']:
+            plot.setData(fillLevel=0, brush=params['fill'])
 
         plot_widget.setLabel('left', 'Value', units='V')
         plot_widget.setLabel('bottom', 'Time', units='s')
-        plot_widget.setXRange(0, 1000)
-        plot_widget.setYRange(0, 10)
+
+        plot_widget.setXRange(params['xrange'][0], params['xrange'][1])
+        plot_widget.setYRange(params['yrange'][0], params['yrange'][1])
 
         return plot_widget, plot
+
 
     def setup(self):
         for i in range(settings.NUMBER_OF_SENSORS):
@@ -36,8 +42,6 @@ class Plotter(QtCore.QObject):
             self.plot_widget.append(w)
             self.plot.append(p)
             self.y_data.append([])
-
-
 
     def run(self):
         self.setup()
