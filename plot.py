@@ -6,26 +6,11 @@ import numpy as np
 from PySide import QtGui, QtCore
 import pyqtgraph as pg
 
-
-class DataInput(QtCore.QThread):
-    source = QtCore.Signal(object)
-    def __init__(self):
-        super().__init__()
-        # self.source = QtCore.Signal(int)
-
-    def run(self):
-        for i in range(1000):
-            val = np.random.rand()
-            # print(i, "->", val)
-            self.source.emit(val)
-            time.sleep(0.01)
-
 class Plotter(QtCore.QObject):
     def __init__(self):
         super().__init__()
-        self.dataIn = DataInput()
-        self.dataIn.source.connect(self.new_data)
-
+        self.y = []
+        self.y2 = []
 
     def setup(self):
         self.app = QtGui.QApplication([])
@@ -42,15 +27,23 @@ class Plotter(QtCore.QObject):
         self.plot_widget = pg.PlotWidget(name='Plot1')
         self.layout.addWidget(self.plot_widget)
 
-        self.y = [0, 0.1, 0.2, 0.001, 0.3]
-        self.plot = self.plot_widget.plot(y=self.y, antialias=True, pen={'color': 'F66'})
+        self.plot = self.plot_widget.plot(antialias=True, pen={'color': 'F66'})
 
         self.plot_widget.setLabel('left', 'Value', units='V')
         self.plot_widget.setLabel('bottom', 'Time', units='s')
-        # self.plot_widget.setXRange(0, 100)
-        # self.plot_widget.setYRange(0, 1)
+        self.plot_widget.setXRange(0, 1000)
+        self.plot_widget.setYRange(0, 10)
 
-        self.dataIn.start()
+        self.plot_widget2 = pg.PlotWidget(name='Plot2')
+        self.layout.addWidget(self.plot_widget2)
+
+        self.plot2 = self.plot_widget2.plot(antialias=True, pen={'color': '6F6'})
+
+        self.plot_widget2.setLabel('left', 'Value', units='V')
+        self.plot_widget2.setLabel('bottom', 'Time', units='s')
+        self.plot_widget2.setXRange(0, 1000)
+        self.plot_widget2.setYRange(0, 10)
+
 
     def run(self):
         self.setup()
@@ -59,10 +52,13 @@ class Plotter(QtCore.QObject):
         self.app.exec_()
 
     @QtCore.Slot(object)
-    def new_data(self, i):
+    def new_data(self, data):
         # print(" received ->", i)
-        self.y.append(i)
+        self.y.append(data.src_values[0])
         self.plot.setData(y=self.y)
+
+        self.y2.append(data.src_values[1])
+        self.plot2.setData(y=self.y2)
 
 
 if __name__ == '__main__':

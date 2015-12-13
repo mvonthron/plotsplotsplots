@@ -1,16 +1,16 @@
 
 import acquisition
+from plot import Plotter
 
 def main():
     serial = acquisition.FakeSerial()
+    plot = Plotter()
 
-    # process = processing.DataProcess()
-    # process.set_source(serial.source)
-
-    # log = output.Logfile('experiment.log')
-    # log.set_source(process.source)
+    serial.source.connect(plot.new_data)
 
     serial.start()
+    plot.run()
+
 
 if __name__ == '__main__':
     main()
