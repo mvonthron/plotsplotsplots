@@ -34,3 +34,17 @@ transform = {
     # identity
     3: lambda x: x,
 }
+
+# export to file
+export = {
+    'raws': {
+        'format': 'text',
+        'stage': 'acquisition',
+        'filename': 'raw_data.data'
+    },
+    'transformed': {
+        'format': 'text',
+        'stage': 'process',
+        'filename': 'scaled_data.data'
+    }
+}

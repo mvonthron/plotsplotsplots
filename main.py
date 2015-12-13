@@ -1,5 +1,9 @@
+#!/usr/bin/env python3
+
 import settings
 import acquisition
+import export
+
 from plot import Plotter
 from process import DataScaling
 
@@ -21,6 +25,10 @@ def validate_settings():
         if i not in settings.transform or not hasattr(settings.transform[i], '__call__'):
             settings.transform[i] = settings.transform['default']
 
+    for name, params in settings.export.items():
+        if params['format'] not in export.FORMATS:
+            print("Invalid export format: {}", params['format'])
+
 
 def main():
     validate_settings()
@@ -31,6 +39,13 @@ def main():
 
     serial.source.connect(transform.process)
     transform.source.connect(plot.new_data)
+
+    for _, params in settings.export.items():
+        exporter = export.FORMATS[params['format']](params['filename'])
+        if params['stage'] == 'acquisition':
+            serial.source.connect(exporter.update)
+        elif params['stage'] == 'process':
+            transform.source.connect(exporter.update)
 
     serial.start()
     plot.run()
