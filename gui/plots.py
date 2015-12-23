@@ -55,6 +55,13 @@ class Plotter(QtCore.QObject):
             self.y_data[i].append(data.values[i])
             self.plot[i].setData(y=self.y_data[i])
 
+    @QtCore.Slot()
+    def clear(self):
+        for i in range(settings.NUMBER_OF_SENSORS):
+            self.y_data[i] = []
+            self.plot[i].clear()
+            # self.plot[i].setData(y=self.y_data[i])
+
 
 if __name__ == '__main__':
     app = QtGui.QApplication([])

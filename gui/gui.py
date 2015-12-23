@@ -1,6 +1,5 @@
 import sys
-from PySide.QtGui import *
-from PySide.QtCore import *
+from PySide import QtGui, QtCore
 
 from gui.mainwindow import Ui_MainWindow
 from gui.plots import Plotter
@@ -8,39 +7,46 @@ from gui.plots import Plotter
 import qdarkstyle
 import pyqtgraph as pg
 
-class MainWindow(QMainWindow, Ui_MainWindow):
+class MainWindow(QtGui.QMainWindow):
+    # signals
+    start = QtCore.Signal()
+    stop = QtCore.Signal()
+    reset = QtCore.Signal()
+
     def __init__(self):
-        self.app = QApplication(sys.argv)
+        self.app = QtGui.QApplication(sys.argv)
         # self.app.setStyleSheet(qdarkstyle.load_stylesheet())
-        self.app.setStyle(QGtkStyle())
+        self.app.setStyle(QtGui.QGtkStyle())
+        self.plotter = None
 
         super(MainWindow, self).__init__()
-        self.setupUi(self)
+
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
 
         self.addPlotWidget()
 
-    def show(self):
-        super().show()
-        return self.app.exec_()
 
     def addPlotWidget(self):
-        del self.placeholder
+        del self.ui.placeholder
         self.plotWidget = pg.GraphicsLayoutWidget()
-        self.horizontalLayout.addWidget(self.plotWidget)
+        self.ui.horizontalLayout.addWidget(self.plotWidget)
 
         self.plotter = Plotter(self.plotWidget)
-
         self.plotter.setup()
+
+    def setupSignalForward(self):
+        pass
+
+    def show(self):
+        self.plotter.clear()
+        super().show()
+        return self.app.exec_()
 
     @property
     def plots(self):
         return self.plotter
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    # app.setStyleSheet(qdarkstyle.load_stylesheet())
-    app.setStyle(QGtkStyle())
-
     mainWin = MainWindow()
-    ret = app.exec_()
-    sys.exit(ret)
+    sys.exit(mainWin.show())
