@@ -32,10 +32,9 @@ class FakeSerial(QtCore.QThread):
     def run(self):
         self._run = True
 
-        for i in range(1000):
-            if not self._run:
-                break
-
+        i = 0
+        while self._run:
+            i += 1
             d = DataPacket()
             d.src_timestamp = time.time()*1000 - self.start_time
             d.src_values = list(np.random.random_sample(settings.NUMBER_OF_SENSORS))

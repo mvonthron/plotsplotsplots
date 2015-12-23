@@ -42,12 +42,6 @@ class Plotter(QtCore.QObject):
             self.plot.append(p)
             self.y_data.append([])
 
-    # def run(self):
-    #     self.setup()
-    #
-    #     self.win.show()
-    #     self.app.exec_()
-
     @QtCore.Slot(object)
     def new_data(self, data):
         # print(" received ->", data)

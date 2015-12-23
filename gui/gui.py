@@ -64,11 +64,26 @@ class MainWindow(QtGui.QMainWindow):
 
         self.state['started'] = not self.state['started']
 
-
     def show(self):
         self.plotter.clear()
         super().show()
         return self.app.exec_()
+
+    def fullscreen(self):
+        if not 'fullscreen' in self.state or not self.state['fullscreen']:
+            self.state['fullscreen'] = True
+            self.ui.menubar.setVisible(False)
+            self.ui.statusbar.setVisible(False)
+            self.showFullScreen()
+        else:
+            self.state['fullscreen'] = False
+            self.showNormal()
+            self.ui.menubar.setVisible(True)
+            self.ui.statusbar.setVisible(True)
+
+    def keyPressEvent(self, e):
+        if e.key() == QtCore.Qt.Key_F11:
+            self.fullscreen()
 
     @property
     def plots(self):
