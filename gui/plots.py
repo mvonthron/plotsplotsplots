@@ -5,11 +5,10 @@ import settings
 
 
 class Plotter(QtCore.QObject):
-    def __init__(self):
+    def __init__(self, parent):
         super().__init__()
 
-        self.app = QtGui.QApplication([])
-        self.win = pg.GraphicsWindow('Plots plots plots!')
+        self.win = parent
 
         self.y_data = []
         self.plot_widget = []
@@ -21,7 +20,7 @@ class Plotter(QtCore.QObject):
         plot_widget = win.addPlot(name=params['title'].format(index=index))
 
         plot = plot_widget.plot(antialias=True, pen={'color': params['color']})
-        if params['fill']:
+        if 'fill' in params and params['fill']:
             plot.setData(fillLevel=0, brush=params['fill'])
 
         plot_widget.setLabel('left', 'Value', units='V')
@@ -43,11 +42,11 @@ class Plotter(QtCore.QObject):
             self.plot.append(p)
             self.y_data.append([])
 
-    def run(self):
-        self.setup()
-
-        self.win.show()
-        self.app.exec_()
+    # def run(self):
+    #     self.setup()
+    #
+    #     self.win.show()
+    #     self.app.exec_()
 
     @QtCore.Slot(object)
     def new_data(self, data):
@@ -58,9 +57,14 @@ class Plotter(QtCore.QObject):
 
 
 if __name__ == '__main__':
-    p = Plotter()
-    p.run()
+    app = QtGui.QApplication([])
+    win = pg.GraphicsWindow('Plots plots plots!')
 
+    p = Plotter(win)
+    # p.setup()
+
+    win.show()
+    app.exec_()
 
 
 

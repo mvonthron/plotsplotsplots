@@ -4,7 +4,7 @@ import settings
 import acquisition
 import export
 
-from plot import Plotter
+from gui.gui import MainWindow
 from process import DataScaling
 
 def validate_settings():
@@ -34,11 +34,11 @@ def main():
     validate_settings()
 
     serial = acquisition.FakeSerial()
-    plot = Plotter()
+    gui = MainWindow()
     transform = DataScaling()
 
     serial.source.connect(transform.process)
-    transform.source.connect(plot.new_data)
+    transform.source.connect(gui.plots.new_data)
 
     for _, params in settings.export.items():
         exporter = export.FORMATS[params['format']](params['filename'])
@@ -48,7 +48,7 @@ def main():
             transform.source.connect(exporter.update)
 
     serial.start()
-    plot.run()
+    gui.show()
 
 
 if __name__ == '__main__':
