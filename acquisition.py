@@ -27,9 +27,15 @@ class FakeSerial(QtCore.QThread):
     def __init__(self):
         super().__init__()
         self.start_time = time.time()*1000
+        self._run = False
 
     def run(self):
+        self._run = True
+
         for i in range(1000):
+            if not self._run:
+                break
+
             d = DataPacket()
             d.src_timestamp = time.time()*1000 - self.start_time
             d.src_values = list(np.random.random_sample(settings.NUMBER_OF_SENSORS))
@@ -42,3 +48,9 @@ class FakeSerial(QtCore.QThread):
             self.source.emit(d)
 
             time.sleep(0.01)
+
+        self._run = False
+
+    @QtCore.Slot()
+    def stop(self):
+        self._run = False

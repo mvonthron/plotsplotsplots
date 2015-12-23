@@ -18,14 +18,28 @@ class MainWindow(QtGui.QMainWindow):
         # self.app.setStyleSheet(qdarkstyle.load_stylesheet())
         self.app.setStyle(QtGui.QGtkStyle())
         self.plotter = None
+        self.state = {
+            'started': False
+        }
 
         super(MainWindow, self).__init__()
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
+        self.validateUi()
         self.addPlotWidget()
+        self.setupSignalForward()
 
+
+
+    def validateUi(self):
+        """
+        Since mainwindow.py is generated from a UI file we run
+        a few checks to validate the basic UI components are there
+        """
+        assert hasattr(self.ui, 'startStopButton')
+        assert hasattr(self.ui, 'resetButton')
 
     def addPlotWidget(self):
         del self.ui.placeholder
@@ -36,7 +50,20 @@ class MainWindow(QtGui.QMainWindow):
         self.plotter.setup()
 
     def setupSignalForward(self):
-        pass
+        self.ui.startStopButton.clicked.connect(self.startStop)
+        self.ui.resetButton.clicked.connect(self.plotter.clear)
+
+    @QtCore.Slot()
+    def startStop(self):
+        if self.state['started']:
+            self.stop.emit()
+            self.ui.startStopButton.setText('Start')
+        else:
+            self.start.emit()
+            self.ui.startStopButton.setText('Stop')
+
+        self.state['started'] = not self.state['started']
+
 
     def show(self):
         self.plotter.clear()

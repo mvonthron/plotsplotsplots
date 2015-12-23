@@ -47,7 +47,9 @@ def main():
         elif params['stage'] == 'process':
             transform.source.connect(exporter.update)
 
-    serial.start()
+    gui.start.connect(serial.start)
+    gui.stop.connect(serial.stop)
+
     gui.show()
 
 

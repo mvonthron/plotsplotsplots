@@ -7,6 +7,12 @@ class Processor(QtCore.QObject):
     def __init__(self):
         super().__init__()
 
+class ProcessorThread(QtCore.QThread):
+    def __init__(self):
+        super().__init__()
+
+
+        
 class DataScaling(Processor):
     def __init__(self):
         super().__init__()
