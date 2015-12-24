@@ -23,8 +23,18 @@ plots = {
     },
     4: {
         'fill': '6F63'
+    },
+
+    #special plots
+    'time': {
+        'display': True
+    },
+    'master': {
+        # 'display': True
     }
 }
+
+target_period = 0.01
 
 # defines basic calibration/transformation functions
 transform = {

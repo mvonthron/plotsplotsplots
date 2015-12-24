@@ -15,14 +15,17 @@ class MainWindow(QtGui.QMainWindow):
 
     def __init__(self):
         self.app = QtGui.QApplication(sys.argv)
-        # self.app.setStyleSheet(qdarkstyle.load_stylesheet())
-        self.app.setStyle(QtGui.QGtkStyle())
+        self.app.setApplicationName("Plots! Plots! Plots!")
+
+        self.app.setStyleSheet(qdarkstyle.load_stylesheet())
+        # self.app.setStyle(QtGui.QGtkStyle())
         self.plotter = None
         self.state = {
-            'started': False
+            'started': False,
+            'fullscreen': False
         }
 
-        super(MainWindow, self).__init__()
+        super().__init__()
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -52,6 +55,7 @@ class MainWindow(QtGui.QMainWindow):
     def setupSignalForward(self):
         self.ui.startStopButton.clicked.connect(self.startStop)
         self.ui.resetButton.clicked.connect(self.plotter.clear)
+        self.plotter.fpsMessage.connect(self.ui.statusbar.showMessage)
 
     @QtCore.Slot()
     def startStop(self):

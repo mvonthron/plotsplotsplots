@@ -1,10 +1,14 @@
 from PySide import QtGui, QtCore
+import time
+
 import pyqtgraph as pg
 
 import settings
 
 
 class Plotter(QtCore.QObject):
+    fpsMessage = QtCore.Signal(str)
+
     def __init__(self, parent):
         super().__init__()
 
@@ -13,6 +17,24 @@ class Plotter(QtCore.QObject):
         self.y_data = []
         self.plot_widget = []
         self.plot = []
+
+        self.src_line = None
+        self.src_data = []
+        self.rcv_line = None
+        self.rcv_data = []
+
+        self.fps = 0.0
+        self.lastUpdate = time.time()
+
+        self.state = {
+            # Timing plot
+            'last_src_time': None,
+            'last_rcv_time': None,
+
+            # FPS calculation
+            'last_update': time.time(),
+            'fps': 0.0,
+        }
 
     def add_plot(self, win, index):
         params = settings.plots[index]
@@ -23,13 +45,26 @@ class Plotter(QtCore.QObject):
         if 'fill' in params and params['fill']:
             plot.setData(fillLevel=0, brush=params['fill'])
 
-        plot_widget.setLabel('left', 'Value', units='V')
+        plot_widget.setLabel('left', 'Force', units='N')
         plot_widget.setLabel('bottom', 'Time', units='s')
 
         plot_widget.setXRange(params['xrange'][0], params['xrange'][1])
         plot_widget.setYRange(params['yrange'][0], params['yrange'][1])
 
         return plot_widget, plot
+
+    def addTimePlot(self, win):
+        plot_widget = win.addPlot(name="Timing")
+        plot_widget.setXRange(settings.plots['default']['xrange'][0], settings.plots['default']['xrange'][1])
+        plot_widget.setYRange(0, settings.target_period*2)
+        plot_widget.setLabel('left', 'Period', units='s')
+        plot_widget.setLabel('bottom', 'Time', units='s')
+
+        # reference
+        plot_widget.addLine(y=settings.target_period, pen={'color': '333'})
+
+        self.src_line = plot_widget.plot(antialias=True,pen={'color': 'F00'})
+        self.rcv_line = plot_widget.plot(antialias=True,pen={'color': '00F'})
 
 
     def setup(self):
@@ -42,6 +77,10 @@ class Plotter(QtCore.QObject):
             self.plot.append(p)
             self.y_data.append([])
 
+        if 'time' in settings.plots and 'display' in settings.plots['time'] and settings.plots['time']['display']:
+            self.addTimePlot(self.win)
+
+
     @QtCore.Slot(object)
     def new_data(self, data):
         # print(" received ->", data)
@@ -49,12 +88,41 @@ class Plotter(QtCore.QObject):
             self.y_data[i].append(data.values[i])
             self.plot[i].setData(y=self.y_data[i])
 
+        if self.rcv_line:
+            if self.state['last_rcv_time']:
+                self.rcv_data.append(data.rcv_timestamp - self.state['last_rcv_time'])
+                self.rcv_line.setData(y=self.rcv_data)
+            self.state['last_rcv_time'] = data.rcv_timestamp
+
+        if self.src_line:
+            if self.state['last_src_time']:
+                self.src_data.append(data.src_timestamp - self.state['last_src_time'])
+                self.src_line.setData(y=self.src_data)
+            self.state['last_src_time'] = data.src_timestamp
+
+
+
+        now = time.time()
+        curr_fps = 1.0 / (now - self.state['last_update'])
+        self.state['last_update'] = now
+        self.state['fps'] = self.state['fps'] * 0.8 + curr_fps * 0.2
+        self.fpsMessage.emit("%0.2f fps" % self.state['fps'])
+
     @QtCore.Slot()
     def clear(self):
         for i in range(settings.NUMBER_OF_SENSORS):
             self.y_data[i] = []
             self.plot[i].clear()
-            # self.plot[i].setData(y=self.y_data[i])
+
+        if self.rcv_line:
+            self.rcv_data = []
+            self.state['last_rcv_time'] = None
+            self.rcv_line.clear()
+
+        if self.src_line:
+            self.src_data = []
+            self.state['last_src_time'] = None
+            self.src_line.clear()
 
 
 if __name__ == '__main__':
