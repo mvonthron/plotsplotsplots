@@ -69,8 +69,6 @@ class Plotter(QtCore.QObject):
     def setPlotShownState(self, state, index):
         assert 0 <= index < len(self.plot_widget)
 
-        print(state, index)
-
         if state == QtCore.Qt.Checked:
             self.win.addItem(self.plot_widget[index])
         else:

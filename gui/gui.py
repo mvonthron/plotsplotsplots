@@ -58,15 +58,11 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.resetButton.clicked.connect(self.plotter.clear)
         self.plotter.fpsMessage.connect(self.ui.statusbar.showMessage)
 
-        # @todo loop over checkboxes (tried with lambda+getattr but didn't work in loop)
-        self.ui.show1.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 0))
-        self.ui.show2.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 1))
-        self.ui.show3.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 2))
-        self.ui.show4.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 3))
-        self.ui.show5.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 4))
-        self.ui.show6.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 5))
-        self.ui.show7.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 6))
-        self.ui.show8.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 7))
+        # connect checkboxes with show/hide plots
+        for i in range(settings.NUMBER_OF_SENSORS):
+            getattr(self.ui, 'show{}'.format(i+1)).stateChanged.connect(
+                lambda state, i=i: self.plotter.setPlotShownState(state, i)
+            )
 
     @QtCore.Slot()
     def startStop(self):
