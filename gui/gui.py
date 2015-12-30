@@ -3,6 +3,7 @@ from PySide import QtGui, QtCore
 
 from gui.mainwindow import Ui_MainWindow
 from gui.plots import Plotter
+import settings
 
 import qdarkstyle
 import pyqtgraph as pg
@@ -56,6 +57,16 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.startStopButton.clicked.connect(self.startStop)
         self.ui.resetButton.clicked.connect(self.plotter.clear)
         self.plotter.fpsMessage.connect(self.ui.statusbar.showMessage)
+
+        # @todo loop over checkboxes (tried with lambda+getattr but didn't work in loop)
+        self.ui.show1.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 0))
+        self.ui.show2.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 1))
+        self.ui.show3.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 2))
+        self.ui.show4.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 3))
+        self.ui.show5.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 4))
+        self.ui.show6.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 5))
+        self.ui.show7.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 6))
+        self.ui.show8.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 7))
 
     @QtCore.Slot()
     def startStop(self):

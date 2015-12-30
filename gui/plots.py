@@ -66,6 +66,15 @@ class Plotter(QtCore.QObject):
         self.src_line = plot_widget.plot(antialias=True,pen={'color': 'F00'})
         self.rcv_line = plot_widget.plot(antialias=True,pen={'color': '00F'})
 
+    def setPlotShownState(self, state, index):
+        assert 0 <= index < len(self.plot_widget)
+
+        print(state, index)
+
+        if state == QtCore.Qt.Checked:
+            self.win.addItem(self.plot_widget[index])
+        else:
+            self.win.removeItem(self.plot_widget[index])
 
     def setup(self):
         for i in range(settings.NUMBER_OF_SENSORS):
@@ -99,8 +108,6 @@ class Plotter(QtCore.QObject):
                 self.src_data.append(data.src_timestamp - self.state['last_src_time'])
                 self.src_line.setData(y=self.src_data)
             self.state['last_src_time'] = data.src_timestamp
-
-
 
         now = time.time()
         curr_fps = 1.0 / (now - self.state['last_update'])
