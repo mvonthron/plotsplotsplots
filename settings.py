@@ -9,6 +9,7 @@ plots = {
         'xrange': [0, 1000],
         'yrange': [0, 10],
         'fill': False,
+        'show': True
     },
 
     # specialized parameters
@@ -27,10 +28,10 @@ plots = {
 
     #special plots
     'time': {
-        'display': True
+        'show': True
     },
     'master': {
-        # 'display': True
+        # 'show': True
     }
 }
 

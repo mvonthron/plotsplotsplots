@@ -22,6 +22,7 @@ class Plotter(QtCore.QObject):
         self.src_data = []
         self.rcv_line = None
         self.rcv_data = []
+        self.time_plot_widget = None
 
         self.fps = 0.0
         self.lastUpdate = time.time()
@@ -66,13 +67,25 @@ class Plotter(QtCore.QObject):
         self.src_line = plot_widget.plot(antialias=True,pen={'color': 'F00'})
         self.rcv_line = plot_widget.plot(antialias=True,pen={'color': '00F'})
 
+        return plot_widget
+
     def setPlotShownState(self, state, index):
         assert 0 <= index < len(self.plot_widget)
 
-        if state == QtCore.Qt.Checked:
-            self.win.addItem(self.plot_widget[index])
-        else:
-            self.win.removeItem(self.plot_widget[index])
+        settings.plots[index]['show'] = state == QtCore.Qt.Checked
+        self.refreshGrid()
+
+    def refreshGrid(self):
+        self.win.clear()
+        shown = 0
+        for i in range(settings.NUMBER_OF_SENSORS):
+            if settings.plots[i]['show']:
+                self.win.addItem(self.plot_widget[i], shown/3, shown%3)
+                shown += 1
+
+        if 'time' in settings.plots and 'show' in settings.plots['time'] and settings.plots['time']['show']:
+            self.win.addItem(self.time_plot_widget, shown/3, shown%3)
+            shown += 1
 
     def setup(self):
         for i in range(settings.NUMBER_OF_SENSORS):
@@ -84,9 +97,9 @@ class Plotter(QtCore.QObject):
             self.plot.append(p)
             self.y_data.append([])
 
-        if 'time' in settings.plots and 'display' in settings.plots['time'] and settings.plots['time']['display']:
-            self.addTimePlot(self.win)
+        self.time_plot_widget = self.addTimePlot(self.win)
 
+        self.refreshGrid()
 
     @QtCore.Slot(object)
     def new_data(self, data):
