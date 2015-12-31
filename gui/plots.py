@@ -70,7 +70,7 @@ class Plotter(QtCore.QObject):
         return plot_widget
 
     def setPlotShownState(self, state, index):
-        assert 0 <= index < len(self.plot_widget)
+        assert index in settings.plots
 
         settings.plots[index]['show'] = state == QtCore.Qt.Checked
         self.refreshGrid()
@@ -80,11 +80,11 @@ class Plotter(QtCore.QObject):
         shown = 0
         for i in range(settings.NUMBER_OF_SENSORS):
             if settings.plots[i]['show']:
-                self.win.addItem(self.plot_widget[i], shown/3, shown%3)
+                self.win.addItem(self.plot_widget[i], shown/settings.PLOTS_PER_ROw, shown%settings.PLOTS_PER_ROw)
                 shown += 1
 
         if 'time' in settings.plots and 'show' in settings.plots['time'] and settings.plots['time']['show']:
-            self.win.addItem(self.time_plot_widget, shown/3, shown%3)
+            self.win.addItem(self.time_plot_widget, shown/settings.PLOTS_PER_ROw, shown%settings.PLOTS_PER_ROw)
             shown += 1
 
     def setup(self):
