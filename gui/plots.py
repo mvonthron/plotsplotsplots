@@ -69,6 +69,14 @@ class Plotter(QtCore.QObject):
 
         return plot_widget
 
+    # @todo refactor naming + common Plot instance
+    def setTitleShownState(self, state):
+        for i in range(settings.NUMBER_OF_SENSORS):
+            self.plot_widget[i].setTitle(settings.plots[i]['title'].format(index=i) if state == QtCore.Qt.Checked else None)
+        self.time_plot_widget.setTitle(settings.plots['time']['title'] if state == QtCore.Qt.Checked else None)
+
+        self.refreshGrid()
+
     def setPlotShownState(self, state, index):
         assert index in settings.plots
 

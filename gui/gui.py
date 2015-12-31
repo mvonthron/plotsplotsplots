@@ -72,6 +72,7 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.columnsSpinBox.valueChanged.connect(self.setNbColumns)
         self.ui.showTiming.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 'time'))
         self.ui.showMaster.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 'master'))
+        self.ui.showTitles.stateChanged.connect(self.plotter.setTitleShownState)
 
     @QtCore.Slot()
     def startStop(self):

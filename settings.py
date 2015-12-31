@@ -28,7 +28,8 @@ plots = {
 
     #special plots
     'time': {
-        'show': True
+        'show': True,
+        'title': 'Time between updates'
     },
     'master': {
         # 'show': True
