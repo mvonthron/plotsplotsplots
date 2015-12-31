@@ -35,8 +35,6 @@ class MainWindow(QtGui.QMainWindow):
         self.addPlotWidget()
         self.setupGuiBindings()
 
-
-
     def validateUi(self):
         """
         Since mainwindow.py is generated from a UI file we run
@@ -55,7 +53,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def setNbColumns(self, n):
         settings.PLOTS_PER_ROw = n
-        self.plotter.refreshGrid()
+        self.plotter.refresh_grid()
 
     def setupGuiBindings(self):
         self.ui.startStopButton.clicked.connect(self.startStop)
@@ -66,13 +64,13 @@ class MainWindow(QtGui.QMainWindow):
         for i in range(settings.NUMBER_OF_SENSORS):
             getattr(self.ui, 'show{}'.format(i+1)).setText(settings.plots[i]['title'].format(index=i))
             getattr(self.ui, 'show{}'.format(i+1)).stateChanged.connect(
-                lambda state, i=i: self.plotter.setPlotShownState(state, i)
+                lambda state, i=i: self.plotter.set_show_plot(state, i)
             )
         # @todo add a real settings manager
         self.ui.columnsSpinBox.valueChanged.connect(self.setNbColumns)
-        self.ui.showTiming.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 'time'))
-        self.ui.showMaster.stateChanged.connect(lambda state: self.plotter.setPlotShownState(state, 'master'))
-        self.ui.showTitles.stateChanged.connect(self.plotter.setTitleShownState)
+        self.ui.showTiming.stateChanged.connect(lambda state: self.plotter.set_show_plot(state, 'time'))
+        self.ui.showMaster.stateChanged.connect(lambda state: self.plotter.set_show_plot(state, 'master'))
+        self.ui.showTitles.stateChanged.connect(self.plotter.set_show_title)
 
     @QtCore.Slot()
     def startStop(self):

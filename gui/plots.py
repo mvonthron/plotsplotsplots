@@ -1,5 +1,6 @@
 from PySide import QtGui, QtCore
 import time
+from math import ceil
 
 import pyqtgraph as pg
 
@@ -23,6 +24,8 @@ class Plotter(QtCore.QObject):
         self.rcv_line = None
         self.rcv_data = []
         self.time_plot_widget = None
+        self.master_plot_widget = None
+        self.master_plot_line = []
 
         self.fps = 0.0
         self.lastUpdate = time.time()
@@ -40,7 +43,7 @@ class Plotter(QtCore.QObject):
     def add_plot(self, win, index):
         params = settings.plots[index]
 
-        plot_widget = win.addPlot(name=params['title'].format(index=index))
+        plot_widget = pg.PlotItem(name=params['title'].format(index=index))
 
         plot = plot_widget.plot(antialias=True, pen={'color': params['color']})
         if 'fill' in params and params['fill']:
@@ -54,8 +57,8 @@ class Plotter(QtCore.QObject):
 
         return plot_widget, plot
 
-    def addTimePlot(self, win):
-        plot_widget = win.addPlot(name="Timing")
+    def add_time_plot(self, win):
+        plot_widget = pg.PlotItem(name="Timing")
         plot_widget.setXRange(settings.plots['default']['xrange'][0], settings.plots['default']['xrange'][1])
         plot_widget.setYRange(0, settings.target_period*2)
         plot_widget.setLabel('left', 'Period', units='s')
@@ -69,21 +72,28 @@ class Plotter(QtCore.QObject):
 
         return plot_widget
 
+    def add_master_plot(self, win):
+        plot_widget = pg.PlotItem(name="Master plot")
+        for i in range(settings.NUMBER_OF_SENSORS):
+            self.master_plot_line.append(plot_widget.plot(antialias=True, pen={'color': settings.plots[i]['color']}))
+
+        return plot_widget
+
     # @todo refactor naming + common Plot instance
-    def setTitleShownState(self, state):
+    def set_show_title(self, state):
         for i in range(settings.NUMBER_OF_SENSORS):
             self.plot_widget[i].setTitle(settings.plots[i]['title'].format(index=i) if state == QtCore.Qt.Checked else None)
         self.time_plot_widget.setTitle(settings.plots['time']['title'] if state == QtCore.Qt.Checked else None)
 
-        self.refreshGrid()
+        self.refresh_grid()
 
-    def setPlotShownState(self, state, index):
+    def set_show_plot(self, state, index):
         assert index in settings.plots
 
         settings.plots[index]['show'] = state == QtCore.Qt.Checked
-        self.refreshGrid()
+        self.refresh_grid()
 
-    def refreshGrid(self):
+    def refresh_grid(self):
         self.win.clear()
         shown = 0
         for i in range(settings.NUMBER_OF_SENSORS):
@@ -93,6 +103,11 @@ class Plotter(QtCore.QObject):
 
         if 'time' in settings.plots and 'show' in settings.plots['time'] and settings.plots['time']['show']:
             self.win.addItem(self.time_plot_widget, shown/settings.PLOTS_PER_ROw, shown%settings.PLOTS_PER_ROw)
+            shown += 1
+
+        if 'master' in settings.plots and 'show' in settings.plots['master'] and settings.plots['master']['show']:
+            self.win.addItem(self.master_plot_widget, row=ceil(shown/settings.PLOTS_PER_ROw), col=0,
+                             colspan=settings.PLOTS_PER_ROw)
             shown += 1
 
     def setup(self):
@@ -105,9 +120,10 @@ class Plotter(QtCore.QObject):
             self.plot.append(p)
             self.y_data.append([])
 
-        self.time_plot_widget = self.addTimePlot(self.win)
+        self.time_plot_widget = self.add_time_plot(self.win)
+        self.master_plot_widget = self.add_master_plot(self.win)
 
-        self.refreshGrid()
+        self.refresh_grid()
 
     @QtCore.Slot(object)
     def new_data(self, data):
@@ -115,6 +131,7 @@ class Plotter(QtCore.QObject):
         for i in range(settings.NUMBER_OF_SENSORS):
             self.y_data[i].append(data.values[i])
             self.plot[i].setData(y=self.y_data[i])
+            self.master_plot_line[i].setData(y=self.y_data[i])
 
         if self.rcv_line:
             if self.state['last_rcv_time']:
