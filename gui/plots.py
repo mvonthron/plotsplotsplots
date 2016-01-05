@@ -133,7 +133,7 @@ class Plotter(QtCore.QObject):
 
     def set_show_title(self, state):
         for i, plot in self.plots.items():
-            if plot.settings['title']:
+            if plot.settings.get('title', False):
                 plot.widget.setTitle(plot.settings['title'].format(index=i) if state == QtCore.Qt.Checked else None)
 
         self.refresh_grid()

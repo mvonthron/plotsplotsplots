@@ -9,7 +9,8 @@ plots = {
         'xrange': [0, 1000],
         'yrange': [0, 10],
         'fill': False,
-        'show': True
+        'show': True,
+        'link_master': True
     },
 
     # specialized parameters
@@ -17,6 +18,7 @@ plots = {
         'title': 'Meh',
         'color': '67C8FF',
         'yrange': [40, 160],
+        'link_master': False
     },
     5: {
         'yrange': [0, 700],
@@ -52,11 +54,11 @@ export = {
     'raws': {
         'format': 'text',
         'stage': 'acquisition',
-        'filename': 'raw_data.data'
+        'filename': 'data/raw_data.data'
     },
     'transformed': {
         'format': 'text',
-        'stage': 'process',
-        'filename': 'scaled_data.data'
+        'stage': 'transform',
+        'filename': 'data/scaled_data.data'
     }
 }

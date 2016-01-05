@@ -40,15 +40,21 @@ def main():
     serial.source.connect(transform.process)
     transform.source.connect(gui.plots.new_data)
 
-    for _, params in settings.export.items():
-        exporter = export.FORMATS[params['format']](params['filename'])
-        if params['stage'] == 'acquisition':
-            serial.source.connect(exporter.update)
-        elif params['stage'] == 'process':
-            transform.source.connect(exporter.update)
-
     gui.start.connect(serial.start)
     gui.stop.connect(serial.stop)
+
+    exporters = []
+    for name, params in settings.export.items():
+        exporter = export.FORMATS[params['format']](name, params)
+        if params['stage'] == 'acquisition':
+            serial.source.connect(exporter.update)
+        elif params['stage'] == 'transform':
+            transform.source.connect(exporter.update)
+        exporters.append(exporter)
+
+    for e in exporters:
+        gui.start.connect(e.start)
+        gui.stop.connect(e.stop)
 
     gui.show()
 
