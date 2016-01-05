@@ -160,9 +160,8 @@ class Plotter(QtCore.QObject):
     def setXRegion(self):
         selection = self.plots['master'].selection
         for _, plot in self.plots.items():
-            if plot.index != 'master':
+            if plot.index != 'master' and plot.settings.get('link_master', True):
                 plot.widget.setXRange(*selection.getRegion(), padding=0)
-
 
     def setup(self):
         for i in range(settings.NUMBER_OF_SENSORS):
@@ -174,10 +173,6 @@ class Plotter(QtCore.QObject):
         if self.plots['master'].selection:
             selection = self.plots['master'].selection
             selection.sigRegionChanged.connect(self.setXRegion)
-            # for _, plot in self.plots.items():
-            #     if plot.index != 'master':
-
-                    # selection.sigRegionChanged.connect(lambda s=selection: plot.widget.setXRange(*s.getRegion(), padding=0))
 
         self.refresh_grid()
 
