@@ -133,7 +133,8 @@ class Plotter(QtCore.QObject):
 
     def set_show_title(self, state):
         for i, plot in self.plots.items():
-            plot.widget.setTitle(plot.settings['title'].format(index=i) if state == QtCore.Qt.Checked else None)
+            if plot.settings['title']:
+                plot.widget.setTitle(plot.settings['title'].format(index=i) if state == QtCore.Qt.Checked else None)
 
         self.refresh_grid()
 
@@ -149,17 +150,19 @@ class Plotter(QtCore.QObject):
 
         for _, plot in self.plots.items():
             if plot.settings['show']:
-                if plot.index == 'master':
-                    row = ceil(shown/settings.PLOTS_PER_ROw)
-                    col = 0
-                    colspan = settings.PLOTS_PER_ROw
-                else:
-                    row = shown/settings.PLOTS_PER_ROw
-                    col = shown%settings.PLOTS_PER_ROw
-                    colspan = 1
+                if plot.index != 'master':
+                    self.win.addItem(plot.widget, row=shown/settings.PLOTS_PER_ROw, col=shown%settings.PLOTS_PER_ROw)
+                    shown += 1
 
-                self.win.addItem(plot.widget, col=col, row=row, colspan=colspan)
-                shown += 1
+        if self.plots['master'].settings['show']:
+            self.win.addItem(plot.widget, row=ceil(shown/settings.PLOTS_PER_ROw), col=0, colspan=settings.PLOTS_PER_ROw)
+
+    def setXRegion(self):
+        selection = self.plots['master'].selection
+        for _, plot in self.plots.items():
+            if plot.index != 'master':
+                plot.widget.setXRange(*selection.getRegion(), padding=0)
+
 
     def setup(self):
         for i in range(settings.NUMBER_OF_SENSORS):
@@ -167,6 +170,14 @@ class Plotter(QtCore.QObject):
 
         self.plots['time'] = TimePlot('time', settings.plots['time'])
         self.plots['master'] = MasterPlot('master', settings.plots['master'])
+
+        if self.plots['master'].selection:
+            selection = self.plots['master'].selection
+            selection.sigRegionChanged.connect(self.setXRegion)
+            # for _, plot in self.plots.items():
+            #     if plot.index != 'master':
+
+                    # selection.sigRegionChanged.connect(lambda s=selection: plot.widget.setXRange(*s.getRegion(), padding=0))
 
         self.refresh_grid()
 
