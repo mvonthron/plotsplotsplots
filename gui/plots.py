@@ -7,7 +7,7 @@ import pyqtgraph as pg
 import settings
 
 class Plot:
-    def __init__(self, i=None, s={}):
+    def __init__(self, i=None, s=None):
         self.index = i
         self.settings = s
 
@@ -15,9 +15,7 @@ class Plot:
         self.plot = None
         self.data = []
 
-        self.is_default = True
-
-        if self.settings:
+        if self.settings is not None:
             self._setup()
 
     def _setup(self):
@@ -56,7 +54,6 @@ class TimePlot(Plot):
         super().__init__(i, s)
 
         del self.plot
-        self.is_default = False
         
     def _setup(self):
         self.widget = pg.PlotItem(name="Timing")
@@ -102,14 +99,18 @@ class TimePlot(Plot):
 class MasterPlot(Plot):
     def __init__(self, i=None, s={}):
         self.lines = []
+        self.selection = None
         super().__init__(i, s)
         del self.plot
-        self.is_default = False
 
     def _setup(self):
         self.widget = pg.PlotItem(name="Master plot")
         for i in range(settings.NUMBER_OF_SENSORS):
             self.lines.append(self.widget.plot(antialias=True, pen={'color': settings.plots[i]['color']}))
+
+        self.selection = pg.LinearRegionItem(settings.plots['default']['xrange'])
+        self.selection.setZValue(-42)
+        self.widget.addItem(self.selection)
 
     def clear(self):
         for line in self.lines:
@@ -124,20 +125,12 @@ class Plotter(QtCore.QObject):
         self.win = parent
         self.plots = {}
 
-        self.fps = 0.0
-        self.lastUpdate = time.time()
-
         self.state = {
-            # Timing plot
-            'last_src_time': None,
-            'last_rcv_time': None,
-
-            # FPS calculation
+            # FPS calculation (for titlebar)
             'last_update': time.time(),
             'fps': 0.0,
         }
 
-    # @todo refactor naming + common Plot instance
     def set_show_title(self, state):
         for i, plot in self.plots.items():
             plot.widget.setTitle(plot.settings['title'].format(index=i) if state == QtCore.Qt.Checked else None)
@@ -147,32 +140,33 @@ class Plotter(QtCore.QObject):
     def set_show_plot(self, state, index):
         assert index in settings.plots
 
-        settings.plots[index]['show'] = state == QtCore.Qt.Checked
+        self.plots[index].settings['show'] = state == QtCore.Qt.Checked
         self.refresh_grid()
 
     def refresh_grid(self):
         self.win.clear()
         shown = 0
-        for i in range(settings.NUMBER_OF_SENSORS):
-            if settings.plots[i]['show']:
-                self.win.addItem(self.plots[i].widget, shown/settings.PLOTS_PER_ROw, shown%settings.PLOTS_PER_ROw)
+
+        for _, plot in self.plots.items():
+            if plot.settings['show']:
+                if plot.index == 'master':
+                    row = ceil(shown/settings.PLOTS_PER_ROw)
+                    col = 0
+                    colspan = settings.PLOTS_PER_ROw
+                else:
+                    row = shown/settings.PLOTS_PER_ROw
+                    col = shown%settings.PLOTS_PER_ROw
+                    colspan = 1
+
+                self.win.addItem(plot.widget, col=col, row=row, colspan=colspan)
                 shown += 1
-
-        if 'time' in settings.plots and 'show' in settings.plots['time'] and settings.plots['time']['show']:
-            self.win.addItem(self.plots['time'].widget, shown/settings.PLOTS_PER_ROw, shown%settings.PLOTS_PER_ROw)
-            shown += 1
-
-        if 'master' in settings.plots and 'show' in settings.plots['master'] and settings.plots['master']['show']:
-            self.win.addItem(self.plots['master'].widget, row=ceil(shown/settings.PLOTS_PER_ROw), col=0,
-                             colspan=settings.PLOTS_PER_ROw)
-            shown += 1
 
     def setup(self):
         for i in range(settings.NUMBER_OF_SENSORS):
             self.plots[i] = Plot(i, settings.plots[i])
 
-        self.plots['time'] = TimePlot('time', settings.plots[i])
-        self.plots['master'] = MasterPlot('master', settings.plots[i])
+        self.plots['time'] = TimePlot('time', settings.plots['time'])
+        self.plots['master'] = MasterPlot('master', settings.plots['master'])
 
         self.refresh_grid()
 
@@ -185,6 +179,7 @@ class Plotter(QtCore.QObject):
 
         self.plots['time'].append(data.rcv_timestamp, data.src_timestamp)
 
+        # update statusbar with FPS
         now = time.time()
         curr_fps = 1.0 / (now - self.state['last_update'])
         self.state['last_update'] = now

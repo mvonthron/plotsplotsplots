@@ -32,7 +32,7 @@ plots = {
         'title': 'Time between updates'
     },
     'master': {
-        # 'show': True
+        'show': False
     }
 }
 
