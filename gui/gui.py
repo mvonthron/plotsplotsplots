@@ -65,6 +65,15 @@ class MainWindow(QtGui.QMainWindow):
             getattr(self.ui, 'show{}'.format(i+1)).stateChanged.connect(
                 lambda state, i=i: self.plotter.set_show_plot(state, i)
             )
+
+        ## menus
+        self.ui.acqMode = QtGui.QActionGroup(self)
+        self.ui.acqMode.addAction(self.ui.actionSerial_Acquisition)
+        self.ui.acqMode.addAction(self.ui.actionFake_Acquisition)
+        # default
+        self.ui.actionFake_Acquisition.setChecked(True)
+
+
         # @todo add a real settings manager
         self.ui.columnsSpinBox.valueChanged.connect(self.setNbColumns)
         self.ui.showTiming.stateChanged.connect(lambda state: self.plotter.set_show_plot(state, 'time'))
