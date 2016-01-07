@@ -7,57 +7,58 @@ import export
 from gui.gui import MainWindow
 from process import DataScaling
 
-def validate_settings():
-    assert settings.NUMBER_OF_SENSORS > 0
+class App:
+    def __init__(self):
+        self.validate()
 
-    if settings.transform['default'] and not hasattr(settings.transform['default'], '__call__'):
-            print("default transformation must be callable or None")
-            settings.transform['default'] = None
+        self.serial = acquisition.FakeSerial()
+        self.gui = MainWindow()
+        self.transform = DataScaling()
 
-    for i in range(settings.NUMBER_OF_SENSORS):
-        # reverse-update plot parameters with defaults
-        s = settings.plots['default'].copy()
-        if i in settings.plots:
-            s.update(settings.plots[i])
-        settings.plots[i] = s
+        self.serial.source.connect(self.transform.process)
+        self.transform.source.connect(self.gui.plots.new_data)
 
-        # check transforms
-        if i not in settings.transform or not hasattr(settings.transform[i], '__call__'):
-            settings.transform[i] = settings.transform['default']
+        self.gui.start.connect(self.serial.start)
+        self.gui.stop.connect(self.serial.stop)
 
-    for name, params in settings.export.items():
-        if params['format'] not in export.FORMATS:
-            print("Invalid export format: {}", params['format'])
+        self.exporters = []
+        for name, params in settings.export.items():
+            exporter = export.FORMATS[params['format']](name, params)
+            if params['stage'] == 'acquisition':
+                self.serial.source.connect(exporter.update)
+            elif params['stage'] == 'transform':
+                self.transform.source.connect(exporter.update)
+            self.exporters.append(exporter)
 
+        for e in self.exporters:
+            self.gui.start.connect(e.start)
+            self.gui.stop.connect(e.stop)
 
-def main():
-    validate_settings()
+    def start(self):
+        self.gui.show()
 
-    serial = acquisition.FakeSerial()
-    gui = MainWindow()
-    transform = DataScaling()
+    def validate(self):
+        assert settings.NUMBER_OF_SENSORS > 0
 
-    serial.source.connect(transform.process)
-    transform.source.connect(gui.plots.new_data)
+        if settings.transform['default'] and not hasattr(settings.transform['default'], '__call__'):
+                print("default transformation must be callable or None")
+                settings.transform['default'] = None
 
-    gui.start.connect(serial.start)
-    gui.stop.connect(serial.stop)
+        for i in range(settings.NUMBER_OF_SENSORS):
+            # reverse-update plot parameters with defaults
+            s = settings.plots['default'].copy()
+            if i in settings.plots:
+                s.update(settings.plots[i])
+            settings.plots[i] = s
 
-    exporters = []
-    for name, params in settings.export.items():
-        exporter = export.FORMATS[params['format']](name, params)
-        if params['stage'] == 'acquisition':
-            serial.source.connect(exporter.update)
-        elif params['stage'] == 'transform':
-            transform.source.connect(exporter.update)
-        exporters.append(exporter)
+            # check transforms
+            if i not in settings.transform or not hasattr(settings.transform[i], '__call__'):
+                settings.transform[i] = settings.transform['default']
 
-    for e in exporters:
-        gui.start.connect(e.start)
-        gui.stop.connect(e.stop)
-
-    gui.show()
+        for name, params in settings.export.items():
+            if params['format'] not in export.FORMATS:
+                print("Invalid export format: {}", params['format'])
 
 
 if __name__ == '__main__':
-    main()
+    App().start()
